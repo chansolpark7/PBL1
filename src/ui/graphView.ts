@@ -8,6 +8,7 @@ export interface GraphViewOptions {
   showLabels: boolean; // node names (A, B, ...)
   showWeights: boolean; // edge weights
   showValues: boolean; // show the f value under each node
+  showFocus?: boolean; // ring around the node the latest step is about + highlight the edge being examined
 }
 
 export const fmt = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(1));
@@ -28,6 +29,7 @@ export class GraphView {
   private nodeClass: string[] = [];
   private valueText: string[] = [];
   private pathEdgeKeys: string[] = [];
+  private examKey = '';
 
   constructor(
     private g: GeoGraph,
@@ -83,6 +85,7 @@ export class GraphView {
       else if (s === NodeState.Closed) cls += ' closed';
       if (onPath.has(v)) cls += ' on-path';
       if (v === run.current) cls += ' current';
+      if (this.opts.showFocus && v === run.focus) cls += ' focus';
       if (v === this.g.start) cls += ' start';
       if (v === this.g.goal) cls += ' goal';
       if (cls !== this.nodeClass[v]) {
@@ -104,6 +107,13 @@ export class GraphView {
       for (const k of this.pathEdgeKeys) this.edgeEls.get(k)?.classList.remove('on-path');
       for (const k of keys) this.edgeEls.get(k)?.classList.add('on-path');
       this.pathEdgeKeys = keys;
+    }
+
+    const exam = this.opts.showFocus && run.edgeFrom >= 0 ? this.key(run.edgeFrom, run.edgeTo) : '';
+    if (exam !== this.examKey) {
+      if (this.examKey) this.edgeEls.get(this.examKey)?.classList.remove('examining');
+      if (exam) this.edgeEls.get(exam)?.classList.add('examining');
+      this.examKey = exam;
     }
   }
 }

@@ -1,10 +1,8 @@
-import { astar } from '../algo/astar';
-import { dijkstra } from '../algo/dijkstra';
-import type { Heuristic, SearchGenerator } from '../algo/graph';
 import { SearchRun } from '../algo/run';
-import { dist, type GeoGraph } from '../graphs/generate';
+import type { GeoGraph } from '../graphs/generate';
 import { fmt, GraphView, type GraphViewOptions } from '../ui/graphView';
 import { Player } from '../ui/player';
+import { graphAlgorithms, type AlgoKey, type AlgoOption } from './algorithms';
 
 export interface GraphDemoConfig {
   description: string; // HTML
@@ -14,10 +12,10 @@ export interface GraphDemoConfig {
 }
 
 interface Panel {
-  title: string;
-  subtitle: () => string;
-  make: () => SearchGenerator;
+  algo: () => AlgoOption;
   view: GraphView;
+  title: HTMLElement;
+  sub: HTMLElement;
   stats: HTMLElement;
   run?: SearchRun;
 }
@@ -29,27 +27,11 @@ interface Panel {
  */
 export function mountGraphDemo(root: HTMLElement, cfg: GraphDemoConfig): void {
   const g = cfg.graph;
-  const s = g.start;
-  const t = g.goal;
-
-  // Straight-line heuristic: every edge costs ≥ length/unit, so it never exceeds the true cost (admissible)
-  const hGood: Heuristic = (v) => dist(g.pos[v], g.pos[t]) / g.unit;
-  const badHeuristics: Record<string, { label: string; desc: string; h: Heuristic }> = {
-    weak: {
-      label: 'Weak heuristic (0.3 × straight-line)',
-      desc: 'h = 0.3 × straight-line distance — far below the true cost → still optimal, but explores almost as widely as Dijkstra',
-      h: (v) => 0.3 * hGood(v),
-    },
-    over: {
-      label: 'Overestimating heuristic (3 × straight-line)',
-      desc: 'h = 3 × straight-line distance — exceeds the true cost (not admissible) → fast, but the path is not guaranteed to be shortest',
-      h: (v) => 3 * hGood(v),
-    },
-  };
-  let badKey = 'weak';
+  const algos = graphAlgorithms(g);
+  let badKey: AlgoKey = 'weak';
 
   // Optimal cost (reference for checking each result)
-  const ref = new SearchRun(g.n, dijkstra(g, s, t));
+  const ref = new SearchRun(g.n, algos.dijkstra.make());
   ref.runToEnd();
   const optimal = ref.cost;
 
@@ -58,9 +40,7 @@ export function mountGraphDemo(root: HTMLElement, cfg: GraphDemoConfig): void {
     <div class="toolbar">
       <div class="player-slot"></div>
       <label class="select">Bad heuristic
-        <select>${Object.entries(badHeuristics)
-          .map(([k, b]) => `<option value="${k}">${b.label}</option>`)
-          .join('')}</select>
+        <select>${(['weak', 'over'] as const).map((k) => `<option value="${k}">${algos[k].short}</option>`).join('')}</select>
       </label>
     </div>
     <div class="legend">
@@ -75,23 +55,21 @@ export function mountGraphDemo(root: HTMLElement, cfg: GraphDemoConfig): void {
     <div class="panels"></div>`;
 
   const panelsEl = root.querySelector<HTMLElement>('.panels')!;
-  const panels: Panel[] = [
-    { title: 'Dijkstra', subtitle: () => 'h = 0 — settles nodes in order of distance from the start', make: () => dijkstra(g, s, t) },
-    { title: 'A* · Bad heuristic', subtitle: () => badHeuristics[badKey].desc, make: () => astar(g, s, t, badHeuristics[badKey].h) },
-    { title: 'A* · Good heuristic', subtitle: () => 'h = straight-line distance — the tightest estimate that never exceeds the true cost', make: () => astar(g, s, t, hGood) },
-  ].map((p) => {
+  const panels: Panel[] = [() => algos.dijkstra, () => algos[badKey], () => algos.good].map((algo) => {
     const box = document.createElement('div');
     box.className = 'panel';
-    box.innerHTML = `<h3>${p.title}</h3><p class="sub"></p><div class="svg-wrap"></div><div class="stats"></div>`;
+    box.innerHTML = `<h3></h3><p class="sub"></p><div class="svg-wrap"></div><div class="stats"></div>`;
     const view = new GraphView(g, cfg.view);
     box.querySelector('.svg-wrap')!.appendChild(view.el);
     panelsEl.appendChild(box);
-    return { ...p, view, stats: box.querySelector<HTMLElement>('.stats')! };
+    return {
+      algo,
+      view,
+      title: box.querySelector('h3')!,
+      sub: box.querySelector('.sub')!,
+      stats: box.querySelector<HTMLElement>('.stats')!,
+    };
   });
-
-  const renderSubtitles = () => {
-    panelsEl.querySelectorAll<HTMLElement>('.panel .sub').forEach((el, i) => (el.textContent = panels[i].subtitle()));
-  };
 
   const renderStats = (p: Panel) => {
     const r = p.run!;
@@ -115,8 +93,12 @@ export function mountGraphDemo(root: HTMLElement, cfg: GraphDemoConfig): void {
   const player = new Player(
     {
       reset: () => {
-        for (const p of panels) p.run = new SearchRun(g.n, p.make());
-        renderSubtitles();
+        for (const p of panels) {
+          const a = p.algo();
+          p.run = new SearchRun(g.n, a.make());
+          p.title.textContent = a.title;
+          p.sub.textContent = a.desc;
+        }
       },
       step: () => {
         for (const p of panels) if (!p.run!.finished) p.run!.expand();
@@ -134,7 +116,7 @@ export function mountGraphDemo(root: HTMLElement, cfg: GraphDemoConfig): void {
   root.querySelector('.player-slot')!.appendChild(player.el);
 
   root.querySelector<HTMLSelectElement>('.toolbar select')!.onchange = (e) => {
-    badKey = (e.target as HTMLSelectElement).value;
+    badKey = (e.target as HTMLSelectElement).value as AlgoKey;
     player.reset();
   };
 

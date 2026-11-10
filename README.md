@@ -26,14 +26,27 @@ src/
   ui/
     player.ts           play / pause / step / run to end / speed controls
     graphView.ts        SVG renderer for coordinate graphs
+    codeView.ts         debugger-style source view (highlights the line that just ran)
+    heapView.ts         binary heap drawn as a tree + array (sift path, stale entries)
   demos/
-    graphDemo.ts        ①② three-way comparison on a fixed graph
+    algorithms.ts       Dijkstra / A* heuristic options shared by the graph views
+    graphDemo.ts        ①② "Compare all three" on a fixed graph
+    inspector.ts        ①② "Step through code & heap": one algorithm, line by line
     gridDemo.ts         ③ interactive grid (Canvas)
   main.ts               graph settings (seed, size) and tabs
 ```
 
-Core idea: each algorithm is written as a `function*` (generator) that `yield`s `push` (added to the queue) / `visit` (settled) / `done` events,
-and the rendering side draws purely from those events. One `SearchRun.expand()` call settles one node, so several algorithms can be compared at the same pace.
+Core idea: each algorithm is written as a `function*` (generator) that `yield`s one event per executed line
+(`pop`, `stale`, `visit`, `edge`, `compare`, `push`, `done`, …), and the rendering side draws purely from those events.
+
+- `SearchRun.advance()` processes one event → the step-through view (one highlighted line per step)
+- `SearchRun.expand()` advances until one node is settled → the compare view (all algorithms at the same pace)
+
+The code view shows the real `dijkstra.ts` / `astar.ts` (imported with Vite's `?raw`). Every executable line is followed by a
+`yield` that carries `at: 'name'` (for an `if`/`while` condition the `yield` comes right before it and reports the condition's value),
+and that line is marked with `@name` at the end of its comment (`x = 1; // @name` or `x = 1; // description @name`).
+The `yield` lines themselves are hidden in the view. If you edit an algorithm: keep each `yield` on its own line,
+give every executable line its own label, and never put the same label on two lines (the console warns if you do).
 
 ## Things you might want to change
 

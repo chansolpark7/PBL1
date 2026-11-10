@@ -22,14 +22,14 @@ export class Player {
 
   constructor(
     private hooks: PlayerHooks,
-    opts: { speed?: number } = {},
+    opts: { speed?: number; stepLabel?: string } = {},
   ) {
     this.speed = opts.speed ?? 30;
     this.el = document.createElement('div');
     this.el.className = 'player';
     this.el.innerHTML = `
       <button data-act="play" class="primary">▶ Play</button>
-      <button data-act="step">Step</button>
+      <button data-act="step">${opts.stepLabel ?? 'Step'}</button>
       <button data-act="end">Run to End</button>
       <button data-act="reset">Reset</button>
       <label class="speed">Speed
@@ -85,6 +85,20 @@ export class Player {
     this.pause();
     if (this.finished) return;
     if (!this.hooks.step()) this.markFinished();
+    this.hooks.render();
+  }
+
+  /** Step repeatedly until `stop()` returns true or the run ends. */
+  stepUntil(stop: () => boolean): void {
+    this.pause();
+    if (this.finished) return;
+    for (;;) {
+      if (!this.hooks.step()) {
+        this.markFinished();
+        break;
+      }
+      if (stop()) break;
+    }
     this.hooks.render();
   }
 

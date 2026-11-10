@@ -349,6 +349,402 @@ select {
   pointer-events: none;
 }
 
+[hidden] {
+  display: none !important;
+}
+
+/* ---------- Sub-views (Compare / Step through) ---------- */
+.subtabs {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.subtabs button {
+  border: none;
+  border-radius: 0;
+  padding: 8px 16px;
+  background: var(--card);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.subtabs button + button {
+  border-left: 1px solid var(--border);
+}
+
+.subtabs button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+/* ---------- Step-through inspector ---------- */
+.inspector {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.inspector .col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 1000px) {
+  .inspector {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wide-heap {
+  margin-top: 16px;
+}
+
+.h3-sub {
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--muted);
+  margin-left: 6px;
+}
+
+.section-title {
+  margin: 24px 0 10px;
+  font-size: 16px;
+}
+
+.legend .focus { background: #fff; border: 3px solid #0f172a; }
+.legend .examining { background: #7c3aed; }
+
+.node.focus {
+  stroke: #0f172a;
+  stroke-width: 4;
+}
+
+.edge.examining {
+  stroke: #7c3aed;
+  stroke-width: 6;
+  stroke-dasharray: none;
+  opacity: 1;
+}
+
+/* Code view */
+.code-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.code-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.code-head .file {
+  font-family: Consolas, 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+
+.code-head .note {
+  color: var(--muted);
+}
+
+.code-scroll {
+  position: relative;
+  max-height: 560px;
+  overflow: auto;
+  background: #fbfcfe;
+}
+
+pre.code {
+  margin: 0;
+  padding: 6px 0;
+  font-family: Consolas, 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  min-width: max-content;
+}
+
+pre.code .line {
+  display: flex;
+  padding-right: 12px;
+}
+
+pre.code .arrow {
+  width: 18px;
+  text-align: center;
+  color: var(--accent);
+  flex: none;
+}
+
+pre.code .ln {
+  width: 30px;
+  padding-right: 10px;
+  text-align: right;
+  color: #94a3b8;
+  flex: none;
+  user-select: none;
+}
+
+pre.code .src {
+  white-space: pre;
+}
+
+pre.code .line.active {
+  background: #fef08a;
+}
+
+pre.code .line.active .arrow::before {
+  content: '▶';
+}
+
+pre.code .line.active .ln {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.tok-kw { color: #7c3aed; font-weight: 600; }
+.tok-num { color: #0369a1; }
+.tok-com { color: #64748b; font-style: italic; }
+
+/* Current step + variables */
+.explain {
+  margin: 0 0 12px;
+  line-height: 1.6;
+  font-size: 14px;
+  min-height: 3.2em;
+}
+
+.explain .ok { color: var(--c-start); }
+.explain .bad { color: var(--c-goal); }
+
+code {
+  font-family: Consolas, 'JetBrains Mono', monospace;
+  font-size: 0.92em;
+  background: #f1f5f9;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+table.vars {
+  border-collapse: collapse;
+  font-family: Consolas, 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+table.vars td {
+  padding: 3px 14px 3px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+table.vars td:first-child {
+  color: var(--muted);
+}
+
+table.vars tr.changed td {
+  background: #fef9c3;
+  font-weight: 700;
+}
+
+/* Heap view */
+.heap-op {
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 2.6em;
+  margin-bottom: 4px;
+}
+
+.heap-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.hedge {
+  stroke: #cbd5e1;
+  stroke-width: 2;
+}
+
+.hedge.hot {
+  stroke: #f59e0b;
+  stroke-width: 4;
+}
+
+.hnode circle {
+  fill: #dcfce7;
+  stroke: #22c55e;
+  stroke-width: 2;
+}
+
+.hnode.hot circle {
+  stroke: #f59e0b;
+  stroke-width: 4;
+}
+
+.hnode.final circle {
+  fill: #fde68a;
+}
+
+.hnode.stale circle {
+  fill: #f1f5f9;
+  stroke: #94a3b8;
+  stroke-dasharray: 4 3;
+}
+
+.hnode.stale .hlabel {
+  fill: #94a3b8;
+  text-decoration: line-through;
+}
+
+.hlabel {
+  font-size: 12px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.hkey {
+  font-size: 11px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  fill: #334155;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3px;
+}
+
+.hidx {
+  font-size: 9px;
+  fill: #94a3b8;
+}
+
+.hmore {
+  font-size: 12px;
+  text-anchor: middle;
+  fill: var(--muted);
+}
+
+.heap-array-head {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 8px 0 6px;
+}
+
+.heap-array-head span {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.heap-array {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.hcell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 40px;
+  padding: 2px 4px 3px;
+  border: 1px solid #86efac;
+  background: #f0fdf4;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hcell .i {
+  font-size: 9px;
+  color: #94a3b8;
+}
+
+.hcell .k {
+  color: #334155;
+}
+
+.hcell.hot {
+  border: 2px solid #f59e0b;
+}
+
+.hcell.final {
+  background: #fde68a;
+}
+
+.hcell.stale {
+  background: #f8fafc;
+  border-style: dashed;
+  border-color: #94a3b8;
+  color: #94a3b8;
+}
+
+.hcell.stale b {
+  text-decoration: line-through;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* Optimization cards */
+.opt-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.opt-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.opt-card.active {
+  border-color: var(--accent);
+  background: #eff6ff;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.opt-card h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.opt-card p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.opt-stat {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.opt-stat b {
+  color: var(--text);
+}
+
 @media (max-width: 640px) {
   .top { padding: 12px 16px 0; }
   main { padding: 16px; }
